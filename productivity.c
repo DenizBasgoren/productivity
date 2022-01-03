@@ -37,7 +37,7 @@ int eventFd, logFd;
 void notifyAndExit(int exitCode) {
 	char *errorMsg = strerror(errno);
 	char notifyBuf[100] = {0};
-	snprintf(notifyBuf, 99, "notify-send 'PAPP Error %d: %s'", exitCode, errorMsg);
+	snprintf(notifyBuf, 99, "sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send 'PAPP Error %d: %s'", exitCode, errorMsg);
 	system(notifyBuf);
 	close(eventFd);
 	close(logFd);
@@ -55,7 +55,6 @@ int main(void) {
 	logFd = open("/home/deniz/Documents/productivity/log", O_CREAT|O_EXCL|O_RDWR|O_APPEND|O_FSYNC, S_IRWXU|S_IRWXG|S_IRWXO);
 	if (errno == EEXIST) {
 		// already created
-		system("notify-send -t 3000 'File already created'");
 
 		errno = 0;
 		logFd = open("/home/deniz/Documents/productivity/log", O_RDWR|O_APPEND|O_FSYNC, S_IRWXU|S_IRWXG|S_IRWXO);
@@ -67,7 +66,6 @@ int main(void) {
 	}
 	else {
 		// file just created
-		system("notify-send -t 3000 'File just created'");
 		errno = 0;
 		write(logFd, zeros_4kb, 4*1024);
 		if (errno) notifyAndExit(4);
@@ -158,19 +156,19 @@ int main(void) {
 			continue;
 		}
 		else if (itsTheRightKey) {
-			system("notify-send -t 1500 'Right key'");
+			system("sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -t 1500 'PAPP: Right Button'");
 			continue; // we don't register a callback for the right key yet
 		}
 
 		// the left key is pressed.
 
 		if (currentGameState == gameIsPaused) {
-			system("notify-send -t 1500 'Playing'");
+			system("sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -t 1500 'PAPP: Playing'");
 			currentGameState = gameIsOn;
 			currentRecord.startTime = (uint32_t) time(NULL);
 		}
 		else if (currentGameState == gameIsOn ) {
-			system("notify-send -t 1500 'Paused'");
+			system("sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -t 1500 'PAPP: Paused'");
 			currentGameState = gameIsPaused;
 			currentRecord.endTime = (uint32_t) time(NULL);
 
