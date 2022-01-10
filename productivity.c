@@ -19,6 +19,12 @@
 
 
 
+#define USER_ID 1000
+
+// the string hack
+#define TOSTR(num) TOSTR_(num)
+#define TOSTR_(num) #num
+
 struct record {
 	uint16_t game;
 	uint16_t _;
@@ -36,8 +42,8 @@ int eventFd, logFd;
 
 void notifyAndExit(int exitCode) {
 	char *errorMsg = strerror(errno);
-	char notifyBuf[100] = {0};
-	snprintf(notifyBuf, 99, "sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send 'PAPP Error %d: %s'", exitCode, errorMsg);
+	char notifyBuf[200] = {0};
+	snprintf(notifyBuf, 199, "sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/" TOSTR(USER_ID) "/bus notify-send 'PAPP Error %d: %s'", exitCode, errorMsg);
 	system(notifyBuf);
 	close(eventFd);
 	close(logFd);
@@ -48,16 +54,17 @@ void notifyAndExit(int exitCode) {
 int main(void) {
 
 	errno = 0;
-	eventFd = open("/dev/input/event5", O_RDONLY);
+	eventFd = open("/dev/input/by-path/acpi-SNY5001:00-event-joystick", O_RDONLY);
 	if (errno) notifyAndExit(1);
 
 	errno = 0;
-	logFd = open("/home/deniz/Documents/productivity/log", O_CREAT|O_EXCL|O_RDWR|O_APPEND|O_FSYNC, S_IRWXU|S_IRWXG|S_IRWXO);
+	umask(0);
+	logFd = open("/home/deniz/Documents/productivity/log", O_CREAT|O_EXCL|O_RDWR|O_APPEND|O_FSYNC, 0666);
 	if (errno == EEXIST) {
 		// already created
 
 		errno = 0;
-		logFd = open("/home/deniz/Documents/productivity/log", O_RDWR|O_APPEND|O_FSYNC, S_IRWXU|S_IRWXG|S_IRWXO);
+		logFd = open("/home/deniz/Documents/productivity/log", O_RDWR|O_APPEND|O_FSYNC);
 		if (errno) notifyAndExit(2);
 
 	}
@@ -156,19 +163,19 @@ int main(void) {
 			continue;
 		}
 		else if (itsTheRightKey) {
-			system("sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -t 1500 'PAPP: Right Button'");
+			system("sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/" TOSTR(USER_ID) "/bus notify-send -t 1500 'PAPP: Right Button'");
 			continue; // we don't register a callback for the right key yet
 		}
 
 		// the left key is pressed.
 
 		if (currentGameState == gameIsPaused) {
-			system("sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -t 1500 'PAPP: Playing'");
+			system("sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/" TOSTR(USER_ID) "/bus notify-send -t 1500 'PAPP: Playing'");
 			currentGameState = gameIsOn;
 			currentRecord.startTime = (uint32_t) time(NULL);
 		}
 		else if (currentGameState == gameIsOn ) {
-			system("sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send -t 1500 'PAPP: Paused'");
+			system("sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/" TOSTR(USER_ID) "/bus notify-send -t 1500 'PAPP: Paused'");
 			currentGameState = gameIsPaused;
 			currentRecord.endTime = (uint32_t) time(NULL);
 
