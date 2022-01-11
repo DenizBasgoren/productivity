@@ -58,7 +58,7 @@ int main(void) {
 	if (errno) notifyAndExit(1);
 
 	errno = 0;
-	umask(0);
+	umask(0); // always succeeds, so no need to reset errno
 	logFd = open("/home/deniz/Documents/productivity/log", O_CREAT|O_EXCL|O_RDWR|O_APPEND|O_FSYNC, 0666);
 	if (errno == EEXIST) {
 		// already created
