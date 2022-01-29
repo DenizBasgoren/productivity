@@ -2,7 +2,7 @@
 #include <fcntl.h>
 // for open
 #include <unistd.h>
-// for read
+// for read, lseek, pread
 #include <errno.h>
 // for errno
 #include <string.h>
@@ -17,6 +17,8 @@
 #include <sys/stat.h>
 // for perm bit macros
 
+
+// note: korsan_papp.service file is at /etc/systemd/system.
 
 
 #define USER_ID 1000
@@ -39,6 +41,10 @@ enum gameState currentGameState = gameIsPaused;
 char zeros_4kb[4*1024];
 
 int eventFd, logFd;
+
+// from game selecting gui
+int askGameNumber(char *gameStartingAddress);
+
 
 void notifyAndExit(int exitCode) {
 	char *errorMsg = strerror(errno);
@@ -79,6 +85,21 @@ int main(void) {
 	}
 	
 
+	// since read and pread expect buffers be 4096 bytes long, we'll be using first 100 or so bytes for reading
+	// from the /dev/eventX file, and the next 4096 bytes to copy the strings of game names.
+	char readBuf[4096*2];
+
+	errno = 0;
+	ssize_t readRet = pread(logFd, readBuf+4096, 4096, 0);
+	// needs to be 4096, otherwise throws 'not aligned'
+	if (readRet == -1) {
+		notifyAndExit(8);
+	}
+	else if (readRet != 4096) { // hoping that pread will read all 4096 bytes at once
+		notifyAndExit(9);
+	}
+
+
 
 	// first read returns 72 chars:
 	// T1  T2  T3  T4   0   0   0   0   R1  R2  R3  0   0   0   0   0   I1  I2  I3   I4  I5   0   0   0 
@@ -101,7 +122,6 @@ int main(void) {
 	// the middle key isn't recognized for some reason.
 
 
-	char readBuf[4096*2];
 	while( true ) {
 
 		// first read should return 72 chars
@@ -179,10 +199,14 @@ int main(void) {
 			currentGameState = gameIsPaused;
 			currentRecord.endTime = (uint32_t) time(NULL);
 
+			int gameNumber = askGameNumber(readBuf+4096);
+			// returns either 0.. index or -1 if no game is selected
+			currentRecord.game = gameNumber;
+			// printf("debug: gameno %d \n", gameNumber);
+
 			errno = 0;
 			ssize_t writeRet = write(logFd, &currentRecord, sizeof(currentRecord));
 			if (writeRet == -1) notifyAndExit(7);
-			printf("%d", (int) writeRet);
 
 			currentRecord.startTime = 0;
 			currentRecord.endTime = 0;

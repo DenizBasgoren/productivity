@@ -1,0 +1,11 @@
+[Unit]
+Description=Korsan_PAPP
+
+[Service]
+Type=simple
+ExecStart=/home/deniz/Documents/productivity/productivity
+Environment="DISPLAY=:0"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
