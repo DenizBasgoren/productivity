@@ -183,6 +183,43 @@ int main(void) {
 			continue;
 		}
 		else if (itsTheRightKey) {
+
+			/*
+			char crncommand[6*5*5] = "xdotool key ";
+			FILE* crnfile = fopen("/home/deniz/Documents/productivity/crn", "r");
+			if (crnfile == NULL ) {
+				system("sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user" TOSTR(USER_ID) "/bus notify-send -t 1500 'Cant open crn file'");
+				continue;
+			}
+			char c;
+			bool lastWasSpace = false;
+			int i = 12;
+			while ( 1 ) {
+				c = fgetc(crnfile);
+				if ( feof(crnfile) ) {
+					// end of file
+					break;
+				}
+				// work on chars
+				if (c >= '0' && c <= '9') {
+					crncommand[i++] = c;
+					crncommand[i++] = ' ';
+					lastWasSpace = false;
+				}
+				else if (!lastWasSpace && c == ' ') {
+					crncommand[i++] = 'T';
+					crncommand[i++] = 'a';
+					crncommand[i++] = 'b';
+					crncommand[i++] = ' ';
+					lastWasSpace = true;
+				}
+				else {
+					break;
+				}
+			}
+			crncommand[i] = '\0';
+			system(crncommand);
+			*/
 			system("sudo -u deniz DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/" TOSTR(USER_ID) "/bus notify-send -t 1500 'PAPP: Right Button'");
 			continue; // we don't register a callback for the right key yet
 		}
